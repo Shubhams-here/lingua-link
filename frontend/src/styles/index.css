@@ -1,0 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body { @apply bg-void text-white; font-family: 'Inter', sans-serif; }
+  * { box-sizing: border-box; }
+}
+@layer components {
+  .btn { @apply px-4 py-2 rounded-lg font-medium transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed; }
+  .btn-primary { @apply btn bg-accent hover:bg-accent-bright text-white; }
+  .btn-ghost   { @apply btn border border-border hover:border-accent/50 text-subtle hover:text-white; }
+  .card        { @apply bg-panel border border-border rounded-xl; }
+}
