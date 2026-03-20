@@ -18,6 +18,8 @@ export default function useWebRTC({ roomId, username }) {
 
   // ── Get camera + mic ──────────────────────────────────────────────────────
   const getMedia = useCallback(async () => {
+    if (localStream.current) return localStream.current;
+    
     setCallStatus('acquiring-media');
     try {
       const stream = await navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS);
@@ -256,14 +258,27 @@ export default function useWebRTC({ roomId, username }) {
       socket.emit('room:join', { roomId, username });
     };
 
-    if (socket.connected) {
-      // Socket is already connected (e.g. navigated within the app)
-      joinRoom();
-    } else {
-      // Wait for connection to complete, then join
-      socket.once('connect', joinRoom);
-      socket.connect();
-    }
+    const initConnection = async () => {
+      try {
+        // Request media right away so the user isn't stuck waiting for the other person to join
+        await getMedia();
+        if (alive) setCallStatus('idle');
+      } catch (err) {
+        // Errors are already handled in getMedia, but we catch here to allow joining the room anyway
+        console.warn('Initial media request failed, continuing to join room');
+      }
+      
+      if (socket.connected) {
+        // Socket is already connected (e.g. navigated within the app)
+        joinRoom();
+      } else {
+        // Wait for connection to complete, then join
+        socket.once('connect', joinRoom);
+        socket.connect();
+      }
+    };
+
+    initConnection();
 
     // ── Cleanup on unmount ──────────────────────────────────────────────────
     return () => {
