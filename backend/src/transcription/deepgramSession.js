@@ -22,9 +22,6 @@ export class DeepgramSession {
       const params = new URLSearchParams({
         model: 'nova-2',
         language: this._language,
-        encoding: 'webm-opus',
-        sample_rate: '48000',
-        channels: '1',
         interim_results: 'true',
         utterance_end_ms: '1000',
         vad_events: 'true',
