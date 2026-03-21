@@ -156,9 +156,12 @@ export default function useWebRTC({ roomId, username }) {
         if (!alive) return;
 
         setCallStatus('connecting');
-        const pc = buildPC(stream);
 
+        // KEY FIX: Only build the PC here if we are the ones initiating the offer.
+        // If we are the receiver, building it here races with `onOffer` building it,
+        // which can overwrite the PeerConnection and destroy the handshake entirely.
         if (shouldCreateOffer) {
+          const pc = buildPC(stream);
           // Create Offer → setLocalDescription → send to peer
           const offer = await pc.createOffer();
           await pc.setLocalDescription(offer);
