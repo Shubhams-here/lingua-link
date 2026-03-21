@@ -2,9 +2,7 @@
 import { io } from 'socket.io-client';
 
 const BACKEND_URL = import.meta.env.VITE_API_URL || 
-  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-    ? 'http://localhost:5000' 
-    : undefined);
+  (window.location.hostname ? `http://${window.location.hostname}:5000` : undefined);
 
 const socket = io(BACKEND_URL, {
   autoConnect: false,
