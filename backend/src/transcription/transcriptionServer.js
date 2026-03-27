@@ -9,11 +9,17 @@ export const attachTranscriptionServer = (httpServer, io) => {
 
   httpServer.on('upgrade', (request, socket, head) => {
     const pathname = request.url.split('?')[0];
+    
+    // IMPORTANT: Only handle /transcription upgrades.
+    // Socket.IO handles its own /socket.io/ upgrades internally.
+    // If we don't check the path, we steal Socket.IO's WebSocket upgrades
+    // and the socket connection breaks in production.
     if (pathname === '/transcription') {
       wss.handleUpgrade(request, socket, head, (ws) => {
         wss.emit('connection', ws, request);
       });
     }
+    // Do NOT call socket.destroy() for other paths — let Socket.IO handle them
   });
 
   wss.on('connection', (browserWs, req) => {
@@ -24,6 +30,7 @@ export const attachTranscriptionServer = (httpServer, io) => {
     const username = decodeURIComponent(url.searchParams.get('username') || 'Anonymous');
 
     if (!socketId || !io.sockets.sockets.has(socketId)) {
+      console.log(`[Transcription] Rejecting connection: socketId=${socketId} not found`);
       browserWs.close(4001, 'Invalid socketId');
       return;
     }

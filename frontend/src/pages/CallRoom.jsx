@@ -98,10 +98,11 @@ export default function CallRoom() {
         />
       </footer>
 
-      {/* Temporary Debug Footer for Live Deployment Checks */}
+      {/* Debug Footer for Live Deployment Checks */}
       <div className="fixed bottom-0 left-0 text-[10px] text-white/40 z-50 p-1 font-mono pointer-events-none">
-        {socket.connected ? '🟢 Socket Connected' : '🔴 Socket Disconnected'} | 
-        URL: {import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`}
+        {socketId ? '🟢 Connected' : '🔴 Disconnected'} | 
+        Backend: {import.meta.env.VITE_API_URL || 'localhost'} | 
+        Call: {callStatus}
       </div>
     </div>
   );

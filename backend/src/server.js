@@ -20,7 +20,10 @@ const app = express();
 app.use(cors({ origin: ORIGINS, credentials: true }));
 app.use(express.json());
 
-app.get('/health', (_, res) => res.json({ ok: true }));
+// Trust proxy headers on Render (needed for correct HTTPS/WSS handling behind their load balancer)
+app.set('trust proxy', 1);
+
+app.get('/health', (_, res) => res.json({ ok: true, timestamp: Date.now() }));
 
 // ── HTTP + SOCKET.IO ──────────────────────────────────────────────────────────
 const httpServer = createServer(app);
@@ -28,9 +31,22 @@ const httpServer = createServer(app);
 const io = new SocketIOServer(httpServer, {
   cors: {
     origin: ORIGINS,
-    methods: ['GET', 'POST']
+    methods: ['GET', 'POST'],
+    credentials: true,
   },
-  transports: ['websocket', 'polling']
+  // IMPORTANT: polling first, then upgrade to websocket.
+  // Many PaaS (Render, Heroku, Railway) need the initial HTTP long-polling
+  // handshake to succeed before they can upgrade the connection to WebSocket.
+  transports: ['polling', 'websocket'],
+  // Allow upgrades from polling → ws
+  allowUpgrades: true,
+  // Increase timeouts for free-tier cold starts (Render spins down after 15 min inactivity)
+  pingTimeout: 60000,
+  pingInterval: 25000,
+  // Increase connection timeout for slow cold starts
+  connectTimeout: 45000,
+  // Allow EIO v3 clients (backward compat)
+  allowEIO3: true,
 });
 
 // ── SOCKET LOGIC ──────────────────────────────────────────────────────────────
@@ -126,10 +142,11 @@ const startServer = async () => {
       console.log('⚠️ Transcription disabled (no API key)');
     }
 
-    // Start server
-    httpServer.listen(PORT, () => {
+    // Start server — bind to 0.0.0.0 for Render (required for external access)
+    httpServer.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`🌐 Allowed origins: ${ORIGINS.join(', ')}`);
+      console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
     });
 
   } catch (err) {
