@@ -100,12 +100,16 @@ io.on('connection', (socket) => {
 // ── START SERVER (ASYNC SAFE) ─────────────────────────────────────────────────
 const startServer = async () => {
   try {
-    // MongoDB
+    // MongoDB (non-fatal — server still works for WebRTC without DB)
     if (MONGO) {
-      await mongoose.connect(MONGO);
-      console.log('✅ MongoDB Connected');
+      try {
+        await mongoose.connect(MONGO);
+        console.log('✅ MongoDB Connected');
+      } catch (mongoErr) {
+        console.warn('⚠️ MongoDB connection failed (server will continue without DB):', mongoErr.message);
+      }
     } else {
-      console.log('⚠️ MONGO_URI not set');
+      console.log('⚠️ MONGO_URI not set — running without database');
     }
 
     // Deepgram (optional)

@@ -2,7 +2,12 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import socket from '../utils/socket';
 
-const BACKEND_WS = 'ws://localhost:5000';
+const BACKEND_WS = (() => {
+  const apiUrl = import.meta.env.VITE_API_URL;
+  if (!apiUrl) return 'ws://localhost:5000';
+  // Convert http(s) URL to ws(s) URL
+  return apiUrl.replace(/^https:/, 'wss:').replace(/^http:/, 'ws:');
+})();
 const CHUNK_MS   = 250;
 const MIME_LIST  = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus'];
 
