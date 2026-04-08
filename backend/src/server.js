@@ -11,9 +11,8 @@ import mongoose from 'mongoose';
 const PORT = process.env.PORT || 5000;
 const MONGO = process.env.MONGO_URI;
 const DGKEY = process.env.DEEPGRAM_API_KEY;
-const ORIGINS = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173')
-  .split(',')
-  .map(s => s.trim());
+const envOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',').map(s => s.trim()) : [];
+const ORIGINS = [...new Set([...envOrigins, 'http://localhost:5173', 'https://shubham-lingua-link.vercel.app'])];
 
 // ── EXPRESS ───────────────────────────────────────────────────────────────────
 const app = express();
